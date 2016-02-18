@@ -1,7 +1,8 @@
 'use strict';
 //Entry point, set custom object in global
-var upath    = require('upath');
-var notifier = require('node-notifier');
+var upath     = require('upath');
+var notifier  = require('node-notifier');
+var timerIcon = require('./iconGenerator');
 // ***************** Electron *****************
 var electron      = require('electron');
 var app           = electron.app;
@@ -11,7 +12,31 @@ var Tray          = electron.Tray;
 
 // Variables
 var timers = [];
+var counters = [];
 var POMO_TIME = 25 * 1000 * 60;
+
+var _setupCounter = function( time ){
+
+    var timeLeft = time === undefined ? POMO_TIME/1000/60 : time;
+    
+    if( timeLeft > 0 ){
+        
+        timerIcon( timeLeft, function( err, icon ){
+
+            if( err ){
+                console.log('ICON ERR', err);
+                return;            
+            }
+
+            appIcon.setImage( icon );
+            counters.push(setTimeout(function(){
+                _setupCounter( --timeLeft );
+            }, 1000 * 60));
+        })
+
+    }
+
+}
 
 var _setupMenu = function(){
 
@@ -25,6 +50,7 @@ var _setupMenu = function(){
     Menu.setApplicationMenu( menu );
     appIcon.setToolTip('Start or stop a Pomodoro Timer.');
     appIcon.setContextMenu( menu );
+
 }
 
 var _toggle = function(){
@@ -33,8 +59,12 @@ var _toggle = function(){
         return STATE.id !== STATES[ item ].id
     });
     STATE = STATES[ STATE[ 0 ] ];
-    
+
     _setupMenu();
+
+    if( STATE === STATES.STARTED ){
+        _setupCounter();
+    }
 
 }
 
@@ -42,6 +72,7 @@ var _stopPomo = function(){
     // End of this pomo
     // Notify user
     clearTimeout( timers.pop() );
+    clearTimeout( counters.pop() );
     _toggle( _startPomo );
     notifier.notify({ 
           title: 'Pomodoro!'
