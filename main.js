@@ -21,7 +21,7 @@ var _setupMenu = function(){
         appIcon.setImage(upath.join(__dirname, 'icons', STATE.icon + '24.png'));
     }
     
-    menu = Menu.buildFromTemplate([{ click: STATE.fn, label: STATE.tip }])
+    menu = Menu.buildFromTemplate([{ click: STATE.fn, label: STATE.tip }].concat( DEFAULT_MENU ));
     Menu.setApplicationMenu( menu );
     appIcon.setToolTip('Start or stop a Pomodoro Timer.');
     appIcon.setContextMenu( menu );
@@ -41,6 +41,7 @@ var _toggle = function(){
 var _stopPomo = function(){
     // End of this pomo
     // Notify user
+    clearTimeout( timers.pop() );
     _toggle( _startPomo );
     notifier.notify({ 
           title: 'Pomodoro!'
@@ -86,6 +87,7 @@ var tmpl       = [{
     label: STATES[STATE],
     click: _startPomo
 }];
+var DEFAULT_MENU = [{ type: 'separator' }, { click: app.quit, label: 'Quit' }];
 // Quit when all windows are closed.
 app.on('window-all-closed', app.quit);
 
