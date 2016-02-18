@@ -1,0 +1,12 @@
+{
+  "name": "Pomoro",
+  "version": "0.1.0",
+  "main": "main.js",
+  "dependencies": {
+    "node-notifier": "^4.5.0",
+    "upath": "*"
+  },
+  "devDependencies": {
+    "electron-packager": "^5.1.0"
+  }
+}
