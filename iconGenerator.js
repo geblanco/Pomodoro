@@ -1,21 +1,20 @@
 'use strict';
 
 // Modules
-var async  = require('async');
 var Canvas = require('canvas')
 var fs     = require('fs');
 var upath  = require('upath');
 
 // Constants
 var DIM = { width : 24, border : 1.3, font : 14 };
-var COLOR = {name: 'red' , light: '#ec9a97', text:'#912521' , border:'#e13d35'};
+var COLOR = { name: 'red' , light: '#ec9a97', text:'#912521' , border:'#e13d35' };
 
 // {name: 'grey' , light: '#97a1a9', text:'#353b43' , border:'#384a59'}
 
 // Export module
-module.exports = function( txt, callback ){
+module.exports = function( tmp, txt, callback ){
 
-    var path = upath.join(__dirname, 'icons', txt + '.png');
+    var path = upath.join(tmp, 'tmpIcons', txt + '.png');
 
     fs.stat( path, function( err, stat ){
 

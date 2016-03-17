@@ -21,7 +21,7 @@ var _setupCounter = function( time ){
     
     if( timeLeft > 0 ){
         
-        timerIcon( timeLeft, function( err, icon ){
+        timerIcon( app.getPath('userData'), timeLeft, function( err, icon ){
 
             if( err ){
                 console.log('ICON ERR', err);
@@ -122,6 +122,14 @@ var DEFAULT_MENU = [{ type: 'separator' }, { click: app.quit, label: 'Quit' }];
 // Quit when all windows are closed.
 app.on('window-all-closed', app.quit);
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-app.on('ready', _setupMenu);
+// ENTRY POINT
+app.on('ready', function(){
+    var fs = require('fs');
+    // Create folder if needed
+    fs.stat( upath.join(app.getPath('userData'), 'tmpIcons'), function( err, stat ){
+        if( err ){
+            fs.mkdirSync( upath.join(app.getPath('userData'), 'tmpIcons') );
+        }
+        _setupMenu();
+    })
+});

@@ -1,9 +1,0 @@
-[Desktop Entry]
-Encoding=UTF-8
-Version=1.0
-Name=Pomodoro
-Comment=Time efficiency program
-Exec=electron /home/gb/Documents/Dev/pomodoro
-Terminal=false
-Type=Application
-Categories=Utility;
