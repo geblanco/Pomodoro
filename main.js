@@ -123,7 +123,7 @@ var setupPrefsWindow = function(){
     width: 200,
     height: 150,
     center: true,
-    resizable: true,
+    resizable: false,
     darkTheme: true,
     show: false,
     title: "Pomodoro Timer Preferences"
