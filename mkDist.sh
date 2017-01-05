@@ -10,10 +10,12 @@ echo "Terminal=false" >> pomodoro.desktop
 echo "Type=Application" >> pomodoro.desktop
 echo "Categories=Utility;" >> pomodoro.desktop
 
+# TODO copy icon to icons folder
+
 electron-packager ./ pomodoro \
 	--platform=linux \
 	--arch=x64 \
-	--version=0.37.2 \
+	--version=$(electron -v | cut -c 2-) \
 	--prune \
 	--ignore="mkDist.sh" \
 	--ignore="tmpIcons/*" \

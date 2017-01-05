@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pomodoro Timer - Settings</title>
+  <script type="text/javascript">
+    function handleSubmit(){
+      var timeVal = parseInt(document.time.time_in_minutes.value, 10)
+      if( isNaN(timeVal) ){
+        alert('Invalid number!\nMust be an integer')
+      }else{
+        console.log('Time set to:', timeVal)
+        require('electron').ipcRenderer.send('set_timer', timeVal)
+        return false
+      }
+    }
+  </script>
+</head>
+<body>
+  <form name="time" onSubmit="return handleSubmit()">
+    <div>
+      <p>Time in minutes</p>
+      <input type="number" name="time_in_minutes" value="25"/><br>
+      <br><input type="submit" name="Submit" value="Update"/><br>
+    </div>
+  </form>
+</body>
+</html>
