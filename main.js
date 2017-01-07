@@ -21,19 +21,20 @@ var fromSeconds = function( num ){
   return (num / 1000 / 60)
 }
 
-// Variables
-var timers = []
+// Global variables
+var timer = null
 var counters = []
+var timeLeft = 0
 var DEFAULT_TIME = settings.get('pomo_time') || 25
 var POMO_TIME = toSeconds( DEFAULT_TIME )
 
-var _setupCounter = function( time ){
+var setupCounter = function( time ){
 
-  var timeLeft = time === undefined ? fromSeconds( POMO_TIME ) : time
+  var _timeLeft = time
   
-  if( timeLeft > 0 ){
+  if( _timeLeft > 0 ){
     
-    timerIcon( app.getPath('userData'), timeLeft, function( err, icon ){
+    timerIcon( app.getPath('userData'), _timeLeft, function( err, icon ){
 
       if( err ){
         console.log('ICON ERR', err)
@@ -42,14 +43,14 @@ var _setupCounter = function( time ){
 
       appIcon.setImage( icon )
       counters.push(setTimeout(function(){
-        _setupCounter( --timeLeft )
+        setupCounter( --_timeLeft )
       }, toSeconds( 1 )))
     })
 
   }
 }
 
-var _setupMenu = function(){
+var setupMenu = function(){
 
   if( !appIcon ){
     appIcon = new Tray(upath.joinSafe(__dirname, 'icons', STATE.icon + '24.png'))
@@ -57,52 +58,82 @@ var _setupMenu = function(){
     appIcon.setImage(upath.joinSafe(__dirname, 'icons', STATE.icon + '24.png'))
   }
   
-  menu = Menu.buildFromTemplate([
-    { click: preferencesWork, label: 'Preferences' },
-    { click: STATE.fn, label: STATE.tip }
-  ].concat( DEFAULT_MENU ))
+  var minimumItems = [{ click: STATE.fn, label: STATE.tip }]
+
+  // If started we allow pause
+  if( STATE.id === STATES.STARTED.id ){
+    minimumItems.push(
+      { click: STATES.PAUSED.fn, label: STATES.PAUSED.tip }
+    )
+  }
+
+  menu = Menu.buildFromTemplate(DEFAULT_MENU_HEAD.concat( minimumItems ).concat( DEFAULT_MENU_TAIL ))
+
   Menu.setApplicationMenu( menu )
-  appIcon.setToolTip('Start or stop a Pomodoro Timer.')
+  appIcon.setToolTip('Start/Pause or Stop a Pomodoro Timer.')
   appIcon.setContextMenu( menu )
 }
 
-var _toggle = function(){
+var toggle = function( targState, continueTime ){
 
-    STATE = Object.keys(STATES).filter(function( item ){
-      return STATE.id !== STATES[ item ].id
-    })
-    STATE = STATES[ STATE[ 0 ] ]
+  STATE = Object.keys(STATES)
+  STATE = STATES[ STATE[ targState ] ]
 
-    _setupMenu()
+  setupMenu()
 
-    if( STATE === STATES.STARTED ){
-      _setupCounter()
-    }
+  if( STATE === STATES.STARTED ){
+    setupCounter( continueTime )
+  }
 }
 
-var _stopPomo = function(){
+var stopPomo = function(){
+  console.log('Stopped timer')
   // End of this pomo
   // Notify user
-  clearTimeout( timers.pop() )
+  clearTimeout( timer )
   clearTimeout( counters.pop() )
-  _toggle( _startPomo )
+  // transition to STOPPED state
+  toggle( STATES.STOPPED.id )
   notifier.notify({ 
-      title: 'Pomodoro!'
+      title: 'Time is up!'
     , message: 'Pomodoro ended, stop the work and take short break'
     , icon: upath.joinSafe(__dirname, 'icons', STATE.icon + '.png')
     , sound: true 
   })
 }
 
-var _startPomo = function(){
+var pausePomo = function(){
+  console.log('Paused timer')
+  // Pause this pomo
+  // Store time left for later continue
+  timeLeft = toSeconds(counters.length)
+  // Notify user
+  clearTimeout( timer )
+  clearTimeout( counters.pop() )
+  // transition to TO_CONTINUE state
+  toggle( STATES.TO_CONTINUE.id )
+  notifier.notify({ 
+      title: 'Timer paused'
+    , message: 'Pomodoro paused, this goes against the pomodoro Technique'
+    , icon: upath.joinSafe(__dirname, 'icons', STATE.icon + '.png')
+    , sound: true 
+  })
+}
+
+var startPomo = function(){
+
+  var pomoTime = timeLeft ? timeLeft : POMO_TIME
+  var pomoMinutes = fromSeconds( pomoTime )
+  console.log((timeLeft ? 'Continue' : 'Started'), 'timer:', pomoMinutes, 'minutes')
   // Pomo started
   // Hide window
   // Notify user
-  timers.push(setTimeout( _stopPomo, POMO_TIME ))
-  _toggle( _stopPomo )
+  timer = setTimeout( stopPomo, pomoTime || POMO_TIME )
+  // transition to STARTED state
+  toggle( STATES.STARTED.id, pomoMinutes )
   notifier.notify({ 
-      title: 'Pomodoro!'
-    , message: 'Pomodoro started, you have ' + fromSeconds( POMO_TIME ) + ' minutes left'
+      title: 'Timer Started!'
+    , message: 'Pomodoro ' + (pomoTime ? 'continued' : 'started') + ', you have ' + pomoMinutes + ' minute' + (pomoMinutes > 1 ? 's' : '') + ' left'
     , icon: upath.joinSafe(__dirname, 'icons', STATE.icon + '.png')
     , sound: true 
   })
@@ -114,11 +145,12 @@ var pomoWork = function(){
     if( err ){
       fs.mkdirSync( upath.joinSafe(app.getPath('userData'), 'tmpIcons') )
     }
-    _setupMenu()
+    setupMenu()
   })
 }
 
 var setupPrefsWindow = function(){
+
   mainWindow = new electron.BrowserWindow({
     width: 200,
     height: 150,
@@ -152,26 +184,40 @@ var preferencesWork = function(){
   mainWindow.show()
 }
 
-var STATES = { 
+var STATES = {
   'STOPPED': {
       tip : 'Start timer'
-    , fn  : _startPomo
+    , fn  : startPomo
     , icon: 'stopped'
     , id  : 0
   },
   'STARTED': {
       tip : 'Stop timer'
-    , fn  : _stopPomo
+    , fn  : stopPomo
     , icon: 'started'
     , id  : 1
-  } 
+  },
+  'PAUSED': {
+      tip : 'Pause timer'
+    , fn  : pausePomo
+    , icon: 'stopped'
+    , id  : 2
+  },
+  'TO_CONTINUE': {
+      tip : 'Continue timer'
+    , fn  : startPomo
+    , icon: 'stopped'
+    , id  : 3
+  }
 }
 var STATE  = STATES.STOPPED
 
 var mainWindow = null
 var appIcon    = null
 var menu       = null
-var DEFAULT_MENU = [{ type: 'separator' }, { click: app.quit, label: 'Quit' }]
+
+var DEFAULT_MENU_HEAD = [{ click: preferencesWork, label: 'Preferences' }]
+var DEFAULT_MENU_TAIL = [{ type: 'separator' }, { click: app.quit, label: 'Quit' }]
 // Quit when all windows are closed.
 app.on('window-all-closed', app.quit)
 
