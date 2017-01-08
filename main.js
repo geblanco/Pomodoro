@@ -95,7 +95,9 @@ var stopPomo = function(){
   console.log('Stopped timer')
   // End of this pomo
   clearTimeout( timer )
-  clearTimeout( counters.pop() )
+  while( counters.length ){
+    clearTimeout( counters.pop() )
+  }
   timeLeft = 0
   // transition to STOPPED state
   toggle( STATES.STOPPED.id )
