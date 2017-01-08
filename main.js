@@ -65,6 +65,11 @@ var setupMenu = function(){
     minimumItems.push(
       { click: STATES.PAUSED.fn, label: STATES.PAUSED.tip }
     )
+  }else if( STATE.id === STATES.TO_CONTINUE.id ){
+    // If paused we allow stop
+    minimumItems.push(
+      { click: STATES.STARTED.fn, label: STATES.STARTED.tip }
+    )
   }
 
   menu = Menu.buildFromTemplate(DEFAULT_MENU_HEAD.concat( minimumItems ).concat( DEFAULT_MENU_TAIL ))
@@ -89,11 +94,12 @@ var toggle = function( targState, continueTime ){
 var stopPomo = function(){
   console.log('Stopped timer')
   // End of this pomo
-  // Notify user
   clearTimeout( timer )
   clearTimeout( counters.pop() )
+  timeLeft = 0
   // transition to STOPPED state
   toggle( STATES.STOPPED.id )
+  // Notify user
   notifier.notify({ 
       title: 'Time is up!'
     , message: 'Pomodoro ended, stop the work and take short break'
@@ -103,15 +109,15 @@ var stopPomo = function(){
 }
 
 var pausePomo = function(){
-  console.log('Paused timer')
   // Pause this pomo
   // Store time left for later continue
-  timeLeft = toSeconds(counters.length)
-  // Notify user
+  timeLeft = toSeconds(fromSeconds(POMO_TIME) - counters.length)
+  console.log('Paused timer, time left:', fromSeconds(timeLeft), 'minutes')
   clearTimeout( timer )
   clearTimeout( counters.pop() )
   // transition to TO_CONTINUE state
   toggle( STATES.TO_CONTINUE.id )
+  // Notify user
   notifier.notify({ 
       title: 'Timer paused'
     , message: 'Pomodoro paused, this goes against the pomodoro Technique'
@@ -122,15 +128,14 @@ var pausePomo = function(){
 
 var startPomo = function(){
 
+  // Pomo started
   var pomoTime = timeLeft ? timeLeft : POMO_TIME
   var pomoMinutes = fromSeconds( pomoTime )
   console.log((timeLeft ? 'Continue' : 'Started'), 'timer:', pomoMinutes, 'minutes')
-  // Pomo started
-  // Hide window
-  // Notify user
   timer = setTimeout( stopPomo, pomoTime || POMO_TIME )
   // transition to STARTED state
   toggle( STATES.STARTED.id, pomoMinutes )
+  // Notify user
   notifier.notify({ 
       title: 'Timer Started!'
     , message: 'Pomodoro ' + (pomoTime ? 'continued' : 'started') + ', you have ' + pomoMinutes + ' minute' + (pomoMinutes > 1 ? 's' : '') + ' left'
