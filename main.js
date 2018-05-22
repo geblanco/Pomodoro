@@ -25,7 +25,7 @@ var fromSeconds = function( num ){
 var timer = null
 var counters = []
 var timeLeft = 0
-var DEFAULT_TIME = settings.get('pomo_time') || 25
+var DEFAULT_TIME = 25
 var POMO_TIME = toSeconds( DEFAULT_TIME )
 
 var setupCounter = function( time ){
@@ -230,6 +230,10 @@ app.on('window-all-closed', app.quit)
 
 // ENTRY POINT
 app.on('ready', function(){
+  if( settings.has('pomo_time') ){
+    DEFAULT_TIME = settings.get('pomo_time')
+    POMO_TIME = toSeconds( DEFAULT_TIME )
+  }
   // First time ...
   if( settings.get('first_time') || Object.keys( settings.getAll() ).length === 0 ){
     settings.set('first_time', false)
