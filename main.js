@@ -3,7 +3,7 @@
 var fs        = require('fs')
 var upath     = require('upath')
 var notifier  = require('node-notifier')
-var settings  = (function(){ var s = require('electron-settings'); return new s(); }())
+var settings  = require('electron-settings')
 var timerIcon = require('./iconGenerator')
 // ***************** Electron *****************
 var electron = require('electron')
@@ -231,7 +231,7 @@ app.on('window-all-closed', app.quit)
 // ENTRY POINT
 app.on('ready', function(){
   // First time ...
-  if( settings.get('first_time') || Object.keys( settings.get() ).length === 0 ){
+  if( settings.get('first_time') || Object.keys( settings.getAll() ).length === 0 ){
     settings.set('first_time', false)
     preferencesWork()
   }else{
