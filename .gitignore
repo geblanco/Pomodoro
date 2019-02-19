@@ -37,3 +37,5 @@ tmpIcons/*
 
 # .desktop
 *.desktop
+
+dist

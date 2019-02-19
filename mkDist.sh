@@ -17,21 +17,24 @@ echo "Type=Application" >> pomodoro.desktop
 echo "Categories=Utility;" >> pomodoro.desktop
 
 # TODO copy icon to icons folder
+version=$(node -p "require('../package.json').version")
 
-electron-packager ./ pomodoro \
+../node_modules/electron-packager/cli.js ../ pomodoro \
 	--platform=linux \
 	--arch=x64 \
-	--velectron-ersion=$(electron -v | cut -c 2-) \
+	--electron-version=$(electron -v | cut -c 2-) \
 	--prune \
+	--ignore="installDeps.sh" \
 	--ignore="mkDist.sh" \
 	--ignore="tmpIcons/*" \
+	--ignore="Makefile/*" \
 	--ignore=".gitignore" \
 	--ignore=".git" \
 	--version-string.FileDescription="pomodoro" \
-	--version-string.FileVersion="0.1.0" \
-	--version-string.ProductVersion="0.1.0" \
+	--version-string.FileVersion="$version" \
+	--version-string.ProductVersion="$version" \
 	--version-string.ProductName="Pomodoro" \
-	--app-version="0.1.0" \
+	--app-version="$version" \
 	--overwrite
 
 mv pomodoro-linux-x64 pomodoro
